@@ -27,6 +27,8 @@ class App( Frame ):
 
         self.last_folder=""
 
+        self.check_xml_tool()
+
     def create_widgets( self ):
         top = self.winfo_toplevel()
         top.rowconfigure( 0, weight=1 )
@@ -93,9 +95,10 @@ class App( Frame ):
             tkMessageBox.showinfo( "Text", "You must select an XML file first" )
             return
 
+
     def check_xml_tool( self ):
-        if not os.path.isdir( sys.path[0] + '/xmlstarlet-1.3.0' ):
-            exit()
+        if not os.path.isfile( sys.path[0] + '/xmlstarlet-1.3.0/xml.exe' ):
+            sys.exit( "Cannof find XML tool: xmlstarlet" )
 
     def browse_for_xml( self ):
         options = {}
