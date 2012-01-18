@@ -2,12 +2,12 @@
 #
 #------------------------------------------------------------------------------
 # xtg v0.1 ( xml tools gui )
-# started 17 Jan 2012, 14:30
 #------------------------------------------------------------------------------
 
 import sys
 import os
-from subprocess import call
+import subprocess
+import commands
 
 from Tkinter import *
 import tkMessageBox
@@ -15,6 +15,33 @@ import tkFileDialog
 
 if( TkVersion < 8.5 ):
     sys.exit( "Fatal error: need Tkinter version 8.5 or higher." )
+
+#------------------------------------------------------------------------------
+#  execute command, reuturn a tuple containing commands' output, stderr and return code
+#------------------------------------------------------------------------------
+# http://stackoverflow.com/questions/337863/python-popen-and-select-waiting-for-a-process-to-terminate-or-a-timeout 
+def runcmd(cmd, timeout=None):
+    ph_out = None # process output
+    ph_err = None # stderr
+    ph_ret = None # return code
+
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # if timeout is not set wait for process to complete
+    if not timeout:
+        ph_ret = p.wait()
+    else:
+        fin_time = time.time() + timeout
+        while p.poll() == None and fin_time > time.time():
+            time.sleep(1)
+
+        # if timeout reached, raise an exception
+        if fin_time < time.time():
+            os.kill(p.pid, signal.SIGKILL)
+            raise OSError("Process timeout has been reached")
+        ph_ret = p.returncode
+
+    ph_out, ph_err = p.communicate()
+    return (ph_out, ph_err, ph_ret)
 
 #------------------------------------------------------------------------------
 class App( Frame ):
@@ -101,6 +128,7 @@ class App( Frame ):
         self.errors.grid( row=3, column=0, columnspan=5, sticky=N+S+E+W )
         self.errors[ "fg" ] = "lightgray"
         self.errors[ "bg" ] = "black"
+        self.errors[ "state" ] = DISABLED
 
     def run_command( self, command ):
         print( "running command: \n" + command )
@@ -120,6 +148,16 @@ class App( Frame ):
             print "Unexpected error:", sys.exc_info()[0]
         return retcode
 
+    def run_xml_tool_command( self, command ):
+        ( out, err, retcode ) = runcmd( command )
+        if( retcode != 0 ):
+            self.errors[ "state" ] = NORMAL
+            self.errors.delete( 1.0, END )
+            self.errors.insert( END, err.strip() )
+            self.errors[ "state" ] = DISABLED
+
+        return retcode
+
     def reset_colors( self ):
         self.xml_wf[ "fg" ] = "gray"
         self.xml_wf[ "bg" ] = "SystemButtonFace"
@@ -132,11 +170,14 @@ class App( Frame ):
             return
 
         self.reset_colors()
+        self.errors[ "state" ] = NORMAL
+        self.errors.delete( 1.0, END )
+        self.errors[ "state" ] = DISABLED
 
         # check XML well-formedness
         #-----------------------------------------------------------------------
         command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xml.get()
-        retcode = self.run_command( command )
+        retcode = self.run_xml_tool_command( command )
         
         if( retcode == 0 ):
             self.xml_wf[ "fg" ] = "white"
@@ -144,12 +185,13 @@ class App( Frame ):
         else:
             self.xml_wf[ "fg" ] = "white"
             self.xml_wf[ "bg" ] = "red"
+            return
 
         # check XSD well-formedness
         #-----------------------------------------------------------------------
         if( len( self.path_xsd.get().strip()) > 0 ):
             command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xsd.get()
-            retcode = self.run_command( command )
+            retcode = self.run_xml_tool_command( command )
             
             if( retcode == 0 ):
                 self.xsd_wf[ "fg" ] = "white"
@@ -157,13 +199,14 @@ class App( Frame ):
             else:
                 self.xsd_wf[ "fg" ] = "white"
                 self.xsd_wf[ "bg" ] = "red"
+                return
 
             # check XSD validity
             #-----------------------------------------------------------------------
             command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd_xsd \
                                                              + " " + self.path_xsd.get()
 
-            retcode = self.run_command( command )
+            retcode = self.run_xml_tool_command( command )
 
             if( retcode == 0 ):
                 self.xsd_valid[ "fg" ] = "white"
@@ -171,6 +214,7 @@ class App( Frame ):
             else:
                 self.xsd_valid[ "fg" ] = "white"
                 self.xsd_valid[ "bg" ] = "red"
+                return
 
 
             # check XML validity
@@ -178,7 +222,7 @@ class App( Frame ):
             command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd.get() \
                                                              + " " + self.path_xml.get()
 
-            retcode = self.run_command( command )
+            retcode = self.run_xml_tool_command( command )
 
             if( retcode == 0 ):
                 self.xml_valid[ "fg" ] = "white"
