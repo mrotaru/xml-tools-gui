@@ -58,7 +58,7 @@ class App( Frame ):
         self.xml_wf[ "fg" ] = "gray"
 
         self.xml_valid = Label ( self, text="VALIDITY" )
-        self.xml_valid.grid ( row=0, column=4, sticky=N+S+E+W, ipadx=10 )
+        self.xml_valid.grid ( row=0, column=4, sticky=N+S+E+W, ipadx=30 )
         self.xml_valid[ "relief" ] = "ridge"
         self.xml_valid[ "font" ] = "impact 12"
         self.xml_valid[ "fg" ] = "gray"
@@ -111,18 +111,22 @@ class App( Frame ):
             print "Unexpected error:", sys.exc_info()[0]
         return retcode
 
+    def reset_colors( self ):
+        self.xml_wf[ "fg" ] = "gray"
+        self.xml_wf[ "bg" ] = "SystemButtonFace"
+        self.xsd_wf[ "fg" ] = "gray"
+        self.xsd_wf[ "bg" ] = "SystemButtonFace"
 
     def check( self ):
         if( len( self.path_xml.get().strip()) == 0 ):
             tkMessageBox.showinfo( "Text", "You must select an XML file first" )
             return
 
+        self.reset_colors()
+
         # check XML well-formedness
         #-----------------------------------------------------------------------
-        self.xml_wf[ "fg" ] = "gray"
-        self.xml_wf[ "bg" ] = "SystemButtonFace"
-
-        command = self.xmlstar_bin + ' val --well-formed ' + self.path_xml.get()
+        command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xml.get()
         retcode = self.run_command( command )
         
         if( retcode == 0 ):
@@ -135,10 +139,7 @@ class App( Frame ):
         # check XSD well-formedness
         #-----------------------------------------------------------------------
         if( len( self.path_xsd.get().strip()) > 0 ):
-            self.xsd_wf[ "fg" ] = "gray"
-            self.xsd_wf[ "bg" ] = "SystemButtonFace"
-
-            command = self.xmlstar_bin + ' val --well-formed ' + self.path_xsd.get()
+            command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xsd.get()
             retcode = self.run_command( command )
             
             if( retcode == 0 ):
@@ -147,6 +148,21 @@ class App( Frame ):
             else:
                 self.xsd_wf[ "fg" ] = "white"
                 self.xsd_wf[ "bg" ] = "red"
+
+            # check XML validity
+            #-----------------------------------------------------------------------
+            command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd.get() \
+                                                             + " " + self.path_xml.get()
+
+            retcode = self.run_command( command )
+
+            if( retcode == 0 ):
+                self.xml_valid[ "fg" ] = "white"
+                self.xml_valid[ "bg" ] = "green"
+            else:
+                self.xml_valid[ "fg" ] = "white"
+                self.xml_valid[ "bg" ] = "red"
+            
 
     def check_xml_tool( self ):
         default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
