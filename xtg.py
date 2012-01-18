@@ -91,11 +91,11 @@ class App( Frame ):
 
         self.xml_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xml_wf.grid ( row=0, column=3, sticky=N+S+E+W, ipadx=10 )
-        mk_status_label( self.xml_wf )
+        self.mk_status_label( self.xml_wf )
 
         self.xml_valid = Label ( self, text="VALIDITY" )
         self.xml_valid.grid ( row=0, column=4, sticky=N+S+E+W, ipadx=30 )
-        mk_status_label( self.xml_valid )
+        self.mk_status_label( self.xml_valid )
 
         # XSD
         #-------------------------------------------------------------------
@@ -110,11 +110,11 @@ class App( Frame ):
 
         self.xsd_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xsd_wf.grid ( row=1, column=3, sticky=N+S+E+W, ipadx=10 )
-        mk_status_label( self.xsd_wf )
+        self.mk_status_label( self.xsd_wf )
 
         self.xsd_valid = Label ( self, text="VALIDITY" )
         self.xsd_valid.grid ( row=1, column=4, sticky=N+S+E+W, ipadx=30 )
-        mk_status_label( self.xsd_valid )
+        self.mk_status_label( self.xsd_valid )
 
         # Check
         #-------------------------------------------------------------------
