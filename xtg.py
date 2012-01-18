@@ -6,7 +6,10 @@
 #------------------------------------------------------------------------------
 
 import sys
+import os
 from Tkinter import *
+import tkMessageBox
+import tkFileDialog
 
 if( TkVersion < 8.5 ):
     sys.exit( "Fatal error: need Tkinter version 8.5 or higher." )
@@ -16,19 +19,21 @@ class App( Frame ):
 
     def __init__( self, master = None ):
         Frame.__init__( self, master )
-#        master.geometry="300x300+40+10"
 
         self.grid()
         self.grid( padx=10, pady=10, sticky=N+S+E+W )
         self.create_widgets()
+        self.check_xml_tool()
+
+        self.last_folder=""
 
     def create_widgets( self ):
         top = self.winfo_toplevel()
         top.rowconfigure( 0, weight=1 )
-        top.columnconfigure( 0, weight=0 )
-        self.columnconfigure(0, weight=0)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
+        top.columnconfigure ( 0, weight=0 )
+        self.columnconfigure( 0, weight=0 )
+        self.columnconfigure( 1, weight=1 )
+        self.columnconfigure( 2, weight=0 )
 
         # XML
         #-------------------------------------------------------------------
@@ -38,7 +43,7 @@ class App( Frame ):
         self.path_xml = Entry( self,text="XML file" )
         self.path_xml.grid  ( row=0, column=1, sticky=E+W )
 
-        self.browse_xml = Button(self, text="...", command=self.quit)
+        self.browse_xml = Button( self, text="...", command=self.browse_for_xml )
         self.browse_xml.grid( row=0, column=2, padx=10, sticky=N+S+E+W)
 
         self.xml_wf = Label ( self, text="WELL-FORMED" )
@@ -61,7 +66,7 @@ class App( Frame ):
         self.path_xsd = Entry( self,text="XSD file" )
         self.path_xsd.grid  ( row=1, column=1, sticky=E+W )
 
-        self.browse_xsd = Button(self, text="...", command=self.quit)
+        self.browse_xsd = Button( self, text="...", command=self.browse_for_schema )
         self.browse_xsd.grid( row=1, column=2, padx=10, sticky=N+S+E+W)
 
         self.xsd_wf = Label ( self, text="WELL-FORMED" )
@@ -72,9 +77,9 @@ class App( Frame ):
 
         # Check
         #-------------------------------------------------------------------
-        self.check = Button(self, text="Check", command=self.quit)
-        self.check.grid( row=2, column=0, columnspan=5, pady=10, padx=10, sticky=N+S+E+W)
-        self.check[ "font" ] = "impact 12"
+        self.check_btn = Button(self, text="Check", command=self.check)
+        self.check_btn.grid( row=2, column=0, columnspan=5, pady=10, padx=10, sticky=N+S+E+W)
+        self.check_btn[ "font" ] = "impact 12"
 
         # Errors
         #-------------------------------------------------------------------
@@ -83,8 +88,42 @@ class App( Frame ):
         self.errors[ "fg" ] = "lightgray"
         self.errors[ "bg" ] = "black"
 
-    def display( self ):
-        TkMessageBox.showinfo("Text", "You typed: %s" % self.enText.get())    
+    def check( self ):
+        if( len( self.path_xml.get().strip()) == 0 ):
+            tkMessageBox.showinfo( "Text", "You must select an XML file first" )
+            return
+
+    def check_xml_tool( self ):
+        if not os.path.isdir( sys.path[0] + '/xmlstarlet-1.3.0' ):
+            exit()
+
+    def browse_for_xml( self ):
+        options = {}
+        options[ "title" ]      = "Select XML File"
+        options[ "filetypes" ]  = [ ("xml","*.xml"), ("All files","*") ]
+        if( len( self.last_folder.strip()) > 0 ):
+            options[ "initialdir" ] = self.last_folder
+
+        xml_file = tkFileDialog.askopenfilename( **options )
+        if( xml_file ):
+            if( os.path.isfile( xml_file )):
+                self.path_xml.delete( 0, len( self.path_xml.get()))
+                self.path_xml.insert( 0, xml_file )
+                self.last_folder = os.path.dirname( xml_file )
+
+    def browse_for_schema( self ):
+        options = {}
+        options[ "title" ]      = "Select a schema"
+        options[ "filetypes" ]  = [ ("XSD Schema","*.xsd"), ("RelaxNG Schema","*.rng"), ("All files","*") ]
+        if( len( self.last_folder.strip()) > 0 ):
+            options[ "initialdir" ] = self.last_folder
+
+        xsd_file = tkFileDialog.askopenfilename( **options )
+        if( xsd_file ):
+            if( os.path.isfile( xsd_file )):
+                self.path_xsd.delete( 0, len( self.path_xsd.get()))
+                self.path_xsd.insert( 0, xsd_file )
+                self.last_folder = os.path.dirname( xsd_file )
 
 #------------------------------------------------------------------------------
 app = App()
