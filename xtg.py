@@ -30,6 +30,9 @@ class App( Frame ):
         self.last_folder=""
         self.xmlstar_bin=""
 
+        # this file will be used to validate the schema
+        self.path_xsd_xsd = sys.path[0] + "/XMLSchema.xsd"
+
         self.check_xml_tool()
 
     def create_widgets( self ):
@@ -79,6 +82,12 @@ class App( Frame ):
         self.xsd_wf[ "relief" ] = "ridge"
         self.xsd_wf[ "font" ] = "impact 12"
         self.xsd_wf[ "fg" ] = "gray"
+
+        self.xsd_valid = Label ( self, text="VALIDITY" )
+        self.xsd_valid.grid ( row=1, column=4, sticky=N+S+E+W, ipadx=30 )
+        self.xsd_valid[ "relief" ] = "ridge"
+        self.xsd_valid[ "font" ] = "impact 12"
+        self.xsd_valid[ "fg" ] = "gray"
 
         # Check
         #-------------------------------------------------------------------
@@ -148,6 +157,21 @@ class App( Frame ):
             else:
                 self.xsd_wf[ "fg" ] = "white"
                 self.xsd_wf[ "bg" ] = "red"
+
+            # check XSD validity
+            #-----------------------------------------------------------------------
+            command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd_xsd \
+                                                             + " " + self.path_xsd.get()
+
+            retcode = self.run_command( command )
+
+            if( retcode == 0 ):
+                self.xsd_valid[ "fg" ] = "white"
+                self.xsd_valid[ "bg" ] = "green"
+            else:
+                self.xsd_valid[ "fg" ] = "white"
+                self.xsd_valid[ "bg" ] = "red"
+
 
             # check XML validity
             #-----------------------------------------------------------------------
