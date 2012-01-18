@@ -62,6 +62,14 @@ class App( Frame ):
 
         self.check_xml_tool()
 
+
+    # sets properties of `widget` to look nice as a status label
+    #--------------------------------------------------------------------------
+    def mk_status_label( self, widget ):
+        widget[ "relief" ] = "ridge"
+        widget[ "font" ] = "impact 12"
+        widget[ "fg" ] = "gray"
+
     def create_widgets( self ):
         top = self.winfo_toplevel()
         top.rowconfigure( 0, weight=1 )
@@ -83,15 +91,11 @@ class App( Frame ):
 
         self.xml_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xml_wf.grid ( row=0, column=3, sticky=N+S+E+W, ipadx=10 )
-        self.xml_wf[ "relief" ] = "ridge"
-        self.xml_wf[ "font" ] = "impact 12"
-        self.xml_wf[ "fg" ] = "gray"
+        mk_status_label( self.xml_wf )
 
         self.xml_valid = Label ( self, text="VALIDITY" )
         self.xml_valid.grid ( row=0, column=4, sticky=N+S+E+W, ipadx=30 )
-        self.xml_valid[ "relief" ] = "ridge"
-        self.xml_valid[ "font" ] = "impact 12"
-        self.xml_valid[ "fg" ] = "gray"
+        mk_status_label( self.xml_valid )
 
         # XSD
         #-------------------------------------------------------------------
@@ -106,15 +110,11 @@ class App( Frame ):
 
         self.xsd_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xsd_wf.grid ( row=1, column=3, sticky=N+S+E+W, ipadx=10 )
-        self.xsd_wf[ "relief" ] = "ridge"
-        self.xsd_wf[ "font" ] = "impact 12"
-        self.xsd_wf[ "fg" ] = "gray"
+        mk_status_label( self.xsd_wf )
 
         self.xsd_valid = Label ( self, text="VALIDITY" )
         self.xsd_valid.grid ( row=1, column=4, sticky=N+S+E+W, ipadx=30 )
-        self.xsd_valid[ "relief" ] = "ridge"
-        self.xsd_valid[ "font" ] = "impact 12"
-        self.xsd_valid[ "fg" ] = "gray"
+        mk_status_label( self.xsd_valid )
 
         # Check
         #-------------------------------------------------------------------
@@ -164,6 +164,15 @@ class App( Frame ):
         self.xsd_wf[ "fg" ] = "gray"
         self.xsd_wf[ "bg" ] = "SystemButtonFace"
 
+    def update_colors( self, widget, code ):
+        if( code == 0 ):
+            widget[ "fg" ] = "white"
+            widget[ "bg" ] = "green"
+        else:
+            widget[ "fg" ] = "white"
+            widget[ "bg" ] = "red"
+
+
     def check( self ):
         if( len( self.path_xml.get().strip()) == 0 ):
             tkMessageBox.showinfo( "Text", "You must select an XML file first" )
@@ -179,13 +188,8 @@ class App( Frame ):
         command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xml.get()
         retcode = self.run_xml_tool_command( command )
         
-        if( retcode == 0 ):
-            self.xml_wf[ "fg" ] = "white"
-            self.xml_wf[ "bg" ] = "green"
-        else:
-            self.xml_wf[ "fg" ] = "white"
-            self.xml_wf[ "bg" ] = "red"
-            return
+        self.update_colors( self.xml_wf, retcode )
+        if( retcode != 0 ): return
 
         # check XSD well-formedness
         #-----------------------------------------------------------------------
@@ -193,13 +197,8 @@ class App( Frame ):
             command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xsd.get()
             retcode = self.run_xml_tool_command( command )
             
-            if( retcode == 0 ):
-                self.xsd_wf[ "fg" ] = "white"
-                self.xsd_wf[ "bg" ] = "green"
-            else:
-                self.xsd_wf[ "fg" ] = "white"
-                self.xsd_wf[ "bg" ] = "red"
-                return
+            self.update_colors( self.xsd_wf, retcode )
+            if( retcode != 0 ): return
 
             # check XSD validity
             #-----------------------------------------------------------------------
@@ -208,14 +207,8 @@ class App( Frame ):
 
             retcode = self.run_xml_tool_command( command )
 
-            if( retcode == 0 ):
-                self.xsd_valid[ "fg" ] = "white"
-                self.xsd_valid[ "bg" ] = "green"
-            else:
-                self.xsd_valid[ "fg" ] = "white"
-                self.xsd_valid[ "bg" ] = "red"
-                return
-
+            self.update_colors( self.xsd_valid, retcode )
+            if( retcode != 0 ): return
 
             # check XML validity
             #-----------------------------------------------------------------------
@@ -224,13 +217,8 @@ class App( Frame ):
 
             retcode = self.run_xml_tool_command( command )
 
-            if( retcode == 0 ):
-                self.xml_valid[ "fg" ] = "white"
-                self.xml_valid[ "bg" ] = "green"
-            else:
-                self.xml_valid[ "fg" ] = "white"
-                self.xml_valid[ "bg" ] = "red"
-            
+            self.update_colors( self.xml_valid, retcode )
+            if( retcode != 0 ): return
 
     def check_xml_tool( self ):
         default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
