@@ -269,5 +269,5 @@ class App( Frame ):
 
 #------------------------------------------------------------------------------
 app = App()
-app.master.title( "Xtg v0.1" )
+app.master.title( "Xtg v0.2" )
 app.mainloop()
