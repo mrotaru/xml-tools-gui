@@ -7,6 +7,8 @@
 
 import sys
 import os
+from subprocess import call
+
 from Tkinter import *
 import tkMessageBox
 import tkFileDialog
@@ -26,6 +28,7 @@ class App( Frame ):
         self.check_xml_tool()
 
         self.last_folder=""
+        self.xmlstar_bin=""
 
         self.check_xml_tool()
 
@@ -48,13 +51,13 @@ class App( Frame ):
         self.browse_xml = Button( self, text="...", command=self.browse_for_xml )
         self.browse_xml.grid( row=0, column=2, padx=10, sticky=N+S+E+W)
 
-        self.xml_wf = Label ( self, text="WELL-FORMED" )
+        self.xml_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xml_wf.grid ( row=0, column=3, sticky=N+S+E+W, ipadx=10 )
         self.xml_wf[ "relief" ] = "ridge"
         self.xml_wf[ "font" ] = "impact 12"
         self.xml_wf[ "fg" ] = "gray"
 
-        self.xml_valid = Label ( self, text="VALID" )
+        self.xml_valid = Label ( self, text="VALIDITY" )
         self.xml_valid.grid ( row=0, column=4, sticky=N+S+E+W, ipadx=10 )
         self.xml_valid[ "relief" ] = "ridge"
         self.xml_valid[ "font" ] = "impact 12"
@@ -71,7 +74,7 @@ class App( Frame ):
         self.browse_xsd = Button( self, text="...", command=self.browse_for_schema )
         self.browse_xsd.grid( row=1, column=2, padx=10, sticky=N+S+E+W)
 
-        self.xsd_wf = Label ( self, text="WELL-FORMED" )
+        self.xsd_wf = Label ( self, text="WELL-FORMEDNESS" )
         self.xsd_wf.grid ( row=1, column=3, sticky=N+S+E+W, ipadx=10 )
         self.xsd_wf[ "relief" ] = "ridge"
         self.xsd_wf[ "font" ] = "impact 12"
@@ -90,15 +93,67 @@ class App( Frame ):
         self.errors[ "fg" ] = "lightgray"
         self.errors[ "bg" ] = "black"
 
+    def run_command( self, command ):
+        print( "running command: \n" + command )
+        try:
+            retcode =  call( command )
+            if retcode < 0:
+                print >>sys.stderr, "Child was terminated by signal", -retcode
+            elif retcode == 0:
+                pass
+            else:
+                print >>sys.stderr, "Child returned", retcode
+        except OSError, e:
+            print >>sys.stderr, "Execution failed:", e
+        except KeyboardInterrupt, e:
+            print >>sys.stderr, "Keyboard interrupt", e
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
+        return retcode
+
+
     def check( self ):
         if( len( self.path_xml.get().strip()) == 0 ):
             tkMessageBox.showinfo( "Text", "You must select an XML file first" )
             return
 
+        # check XML well-formedness
+        #-----------------------------------------------------------------------
+        self.xml_wf[ "fg" ] = "gray"
+        self.xml_wf[ "bg" ] = "SystemButtonFace"
+
+        command = self.xmlstar_bin + ' val --well-formed ' + self.path_xml.get()
+        retcode = self.run_command( command )
+        
+        if( retcode == 0 ):
+            self.xml_wf[ "fg" ] = "white"
+            self.xml_wf[ "bg" ] = "green"
+        else:
+            self.xml_wf[ "fg" ] = "white"
+            self.xml_wf[ "bg" ] = "red"
+
+        # check XSD well-formedness
+        #-----------------------------------------------------------------------
+        if( len( self.path_xsd.get().strip()) > 0 ):
+            self.xsd_wf[ "fg" ] = "gray"
+            self.xsd_wf[ "bg" ] = "SystemButtonFace"
+
+            command = self.xmlstar_bin + ' val --well-formed ' + self.path_xsd.get()
+            retcode = self.run_command( command )
+            
+            if( retcode == 0 ):
+                self.xsd_wf[ "fg" ] = "white"
+                self.xsd_wf[ "bg" ] = "green"
+            else:
+                self.xsd_wf[ "fg" ] = "white"
+                self.xsd_wf[ "bg" ] = "red"
 
     def check_xml_tool( self ):
-        if not os.path.isfile( sys.path[0] + '/xmlstarlet-1.3.0/xml.exe' ):
+        default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
+        if not os.path.isfile( default_path ):
             sys.exit( "Cannof find XML tool: xmlstarlet" )
+        else:
+            self.xmlstar_bin = default_path
 
     def browse_for_xml( self ):
         options = {}
