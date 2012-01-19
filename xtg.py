@@ -8,6 +8,8 @@ import sys
 import os
 import subprocess
 import commands
+import string
+import re
 
 from Tkinter import *
 import tkMessageBox
@@ -46,22 +48,24 @@ def runcmd(cmd, timeout=None):
 #------------------------------------------------------------------------------
 class App( Frame ):
 
+    xml_file_path = ""
+    xsd_file_path = ""
+
     def __init__( self, master = None ):
         Frame.__init__( self, master )
+
+        self.last_folder=""
+        self.xmlstar_bin=""
+        self.xml_file_path = StringVar()
+        self.xsd_file_path = StringVar()
+
+        # this file will be used to validate the schema
+        self.path_xsd_xsd = sys.path[0] + "/XMLSchema.xsd"
 
         self.grid()
         self.grid( padx=10, pady=10, sticky=N+S+E+W )
         self.create_widgets()
         self.check_xml_tool()
-
-        self.last_folder=""
-        self.xmlstar_bin=""
-
-        # this file will be used to validate the schema
-        self.path_xsd_xsd = sys.path[0] + "/XMLSchema.xsd"
-
-        self.check_xml_tool()
-
 
     # sets properties of `widget` to look nice as a status label
     #--------------------------------------------------------------------------
@@ -83,7 +87,7 @@ class App( Frame ):
         self.label_xml = Label( self, text="XML file:" )
         self.label_xml.grid ( row=0, column=0, sticky=N+S+E+W )
 
-        self.path_xml = Entry( self,text="XML file" )
+        self.path_xml = Entry( self, text="XML file", textvariable=self.xml_file_path )
         self.path_xml.grid  ( row=0, column=1, sticky=E+W )
 
         self.browse_xml = Button( self, text="...", command=self.browse_for_xml )
@@ -102,7 +106,7 @@ class App( Frame ):
         self.label_xsd = Label( self, text="XSD file:" )
         self.label_xsd.grid ( row=1, column=0, sticky=N+S+E+W )
 
-        self.path_xsd = Entry( self,text="XSD file" )
+        self.path_xsd = Entry( self,text="XSD file", textvariable=self.xsd_file_path )
         self.path_xsd.grid  ( row=1, column=1, sticky=E+W )
 
         self.browse_xsd = Button( self, text="...", command=self.browse_for_schema )
@@ -153,16 +157,79 @@ class App( Frame ):
         if( retcode != 0 ):
             self.errors[ "state" ] = NORMAL
             self.errors.delete( 1.0, END )
-            self.errors.insert( END, err.strip() )
+
+            # regex which will detect the filenames of the loaded files
+            re_str = "((?:" + re.escape( self.xml_file_path.get() ) + \
+                    ")|(?:" + re.escape( self.xsd_file_path.get() ) + "))\:(\d+)\.(\d+)\:\s" 
+            cre_filename  = re.compile( re_str )
+            
+            # find all the occurences of the filename inside the string returned by xmlstar
+            filename_iter = cre_filename.finditer( err )
+            
+            for match in filename_iter:
+                self.errors.insert( END, "File:    " + os.path.basename( match.group(1) ) + "\n" )
+                self.errors.insert( END, "Line:    " + match.group(2) + "\n" )
+                self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
+                message = err[ match.end():]
+                self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
+
+                if( message.find( "This element is not expected. Expected is one of" ) != -1 ):
+                    # regex for expected elements
+                    re_elements = "'?(" + re.escape( "{http://www.w3.org/2001/XMLSchema}" ) + ")([a-zA-z]+)['\s,]"
+                    cre_elements = re.compile( re_elements )
+
+                    self.errors.tag_configure('ill_element_name', foreground='#FA8072',    relief='raised')
+                    self.errors.tag_configure('ill_namespace',    foreground='grey',       relief='raised')
+                    self.errors.tag_configure('namespace',        foreground='grey',       relief='raised')
+                    self.errors.tag_configure('element_name',     foreground='#8FBC8F',    relief='raised')
+                    self.errors.tag_configure('dashes',           foreground='#708090',    relief='raised')
+                    
+                    printed_ill_element = False
+                    frags = cre_elements.split( message )
+                    i=0
+                    while ( i < len( frags ) - 1 ):
+                        frag = frags[i]
+                        if( frag == "Element " ):
+                            self.errors.insert( END, frag, ( "error_msg_body" ) )
+                            i = i+1
+                            continue
+                        if( frag == ": This element is not expected. Expected is one of ( " ):
+                            self.errors.insert( END, frag + "\n", ( "error_msg_body" ) )
+                            exp_ns = True
+                            i = i+1
+                            continue
+                        if( frag ==" " ):
+                            i = i+1
+                            continue
+                        if( frag ==")." ):
+                            break
+                        i = i+1
+                        if( printed_ill_element ):
+                            self.errors.insert( END, frag, ( "namespace" ) )
+                            self.errors.insert( END, frags[i] + "\n", ( "element_name" ) )
+                        else:
+                            self.errors.insert( END, frag, ( "namespace" ) )
+                            self.errors.insert( END, frags[i] + "\n", ( "ill_element_name" ) )
+                            printed_ill_element = True
+                        i = i+1
+                else:
+                    self.errors.insert( END, message )
+
+                self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
+
             self.errors[ "state" ] = DISABLED
 
         return retcode
 
     def reset_colors( self ):
-        self.xml_wf[ "fg" ] = "gray"
-        self.xml_wf[ "bg" ] = "SystemButtonFace"
-        self.xsd_wf[ "fg" ] = "gray"
-        self.xsd_wf[ "bg" ] = "SystemButtonFace"
+        self.xml_wf     [ "fg" ] = "gray"
+        self.xml_wf     [ "bg" ] = "SystemButtonFace"
+        self.xml_valid  [ "fg" ] = "gray"
+        self.xml_valid  [ "bg" ] = "SystemButtonFace"
+        self.xsd_wf     [ "fg" ] = "gray"
+        self.xsd_wf     [ "bg" ] = "SystemButtonFace"
+        self.xsd_valid  [ "fg" ] = "gray"
+        self.xsd_valid  [ "bg" ] = "SystemButtonFace"
 
     def update_colors( self, widget, code ):
         if( code == 0 ):
