@@ -327,7 +327,8 @@ class App( Frame ):
     def check_xml_tool( self ):
         default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
         if not os.path.isfile( default_path ):
-            sys.exit( "Cannof find XML tool: xmlstarlet" )
+            tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
+            sys.exit()
         else:
             self.xmlstar_bin = default_path
 
