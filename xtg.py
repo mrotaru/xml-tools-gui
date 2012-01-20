@@ -51,6 +51,11 @@ class App( Frame ):
     xml_file_path = ""
     xsd_file_path = ""
 
+    # { <hash> : [ <well-formedness>, { <schema> : <validity> ... }] }
+    # we know the XSD downloaded from the W3C website is well-formed and valid
+    w3c_schema_hash = "c636445710b40614427479bd68bc812d389762ec"
+    checked_files = { w3c_schema_hash : [ 1, { w3c_schema_hash : 1 } ] }
+
     def __init__( self, master = None ):
         Frame.__init__( self, master )
 
@@ -66,6 +71,15 @@ class App( Frame ):
         self.grid( padx=10, pady=10, sticky=N+S+E+W )
         self.create_widgets()
         self.check_xml_tool()
+
+    def hashfile( self, filepath ):
+        sha1 = hashlib.sha1()
+        f = open( filepath, 'rb' )
+        try:
+            sha1.update( f.read() )
+        finally:
+            f.close()
+        return sha1.hexdigest()
 
     # sets properties of `widget` to look nice as a status label
     #--------------------------------------------------------------------------
@@ -239,6 +253,29 @@ class App( Frame ):
             widget[ "fg" ] = "white"
             widget[ "bg" ] = "red"
 
+    def check_validity( self, xml_file, schema ):
+        xml_hash = hashfile( xml_file )
+        schema_hash = hashfile( schema )
+
+        if( checked_files.has_key( xml_hash ) ):
+            if( checked_files[ file_hash ][1].has_key( schema_hash ) ):
+                return checked_files[ file_hash ][1][ schema_hash ]
+            else:
+                check_well_formedness( xml_file )
+                pass
+
+        schema_has = hashfile( schema )
+
+    def check_well_formedness( self, xml_file ):
+        file_hash = hashfile( xml_file )
+
+        if checked_files.has_key( file_hash ):
+            return checked_files[ file_hash ][0]
+        else:
+            cmd = self.xmlstar_bin + ' val --err --well-formed ' + xml_file
+            retcode = run_xml_tool_command( cmd )
+            checked_files[ file_hash ] = [ retcode, {} ]
+            return retcode
 
     def check( self ):
         if( len( self.path_xml.get().strip()) == 0 ):
