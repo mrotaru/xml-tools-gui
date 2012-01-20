@@ -168,6 +168,8 @@ class App( Frame ):
 
     def run_xml_tool_command( self, command ):
         ( out, err, retcode ) = runcmd( command )
+        print "out: \n" + out
+        print "err: \n" + err
         if( retcode != 0 ):
             self.errors[ "state" ] = NORMAL
             self.errors.delete( 1.0, END )
@@ -176,16 +178,17 @@ class App( Frame ):
             re_str = "((?:" + re.escape( self.xml_file_path.get() ) + \
                     ")|(?:" + re.escape( self.xsd_file_path.get() ) + "))\:(\d+)\.(\d+)\:\s" 
             cre_filename  = re.compile( re_str )
-            
+
             # find all the occurences of the filename inside the string returned by xmlstar
             filename_iter = cre_filename.finditer( err )
-            
+
             for match in filename_iter:
                 self.errors.insert( END, "File:    " + os.path.basename( match.group(1) ) + "\n" )
                 self.errors.insert( END, "Line:    " + match.group(2) + "\n" )
                 self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
                 message = err[ match.end():]
                 self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
+                print "message: \n" + message
 
                 if( message.find( "This element is not expected. Expected is one of" ) != -1 ):
                     # regex for expected elements
@@ -197,7 +200,7 @@ class App( Frame ):
                     self.errors.tag_configure('namespace',        foreground='grey',       relief='raised')
                     self.errors.tag_configure('element_name',     foreground='#8FBC8F',    relief='raised')
                     self.errors.tag_configure('dashes',           foreground='#708090',    relief='raised')
-                    
+
                     printed_ill_element = False
                     frags = cre_elements.split( message )
                     i=0
@@ -289,25 +292,24 @@ class App( Frame ):
 
         # check XML well-formedness
         #-----------------------------------------------------------------------
-        command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xml.get()
+        command = self.xmlstar_bin + ' val --err --well-formed "' + self.path_xml.get() + '"'
         retcode = self.run_xml_tool_command( command )
-        
+
         self.update_colors( self.xml_wf, retcode )
         if( retcode != 0 ): return
 
         # check XSD well-formedness
         #-----------------------------------------------------------------------
         if( len( self.path_xsd.get().strip()) > 0 ):
-            command = self.xmlstar_bin + ' val --err --well-formed ' + self.path_xsd.get()
+            command = self.xmlstar_bin + ' val --err --well-formed "' + self.path_xsd.get() + '"'
             retcode = self.run_xml_tool_command( command )
-            
+
             self.update_colors( self.xsd_wf, retcode )
             if( retcode != 0 ): return
 
             # check XSD validity
             #-----------------------------------------------------------------------
-            command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd_xsd \
-                                                             + " " + self.path_xsd.get()
+            command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd_xsd + '"' + ' "' + self.path_xsd.get() + '"'
 
             retcode = self.run_xml_tool_command( command )
 
@@ -316,8 +318,7 @@ class App( Frame ):
 
             # check XML validity
             #-----------------------------------------------------------------------
-            command = self.xmlstar_bin + ' val --err --xsd ' + self.path_xsd.get() \
-                                                             + " " + self.path_xml.get()
+            command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd.get() + '"' + ' "' + self.path_xml.get() + '"'
 
             retcode = self.run_xml_tool_command( command )
 
