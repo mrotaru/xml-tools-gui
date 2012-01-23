@@ -173,6 +173,20 @@ class App( Frame ):
         if( retcode != 0 ):
             self.errors[ "state" ] = NORMAL
             self.errors.delete( 1.0, END )
+            
+#            re_xsd_str = "(" + re.escape( os.path.basename(self.xsd_file_path.get()) ) + ")"
+            re_xsd_str = re.escape( os.path.basename(self.xsd_file_path.get()) )
+            print re_xsd_str
+            cre_xsd    = re.compile( re_xsd_str )
+            
+            m = cre_xsd.search( err )
+            print m
+            if( m):
+                self.errors.insert( END, err )
+                return -100
+            else:
+                self.errors.insert( END, err )
+                return retcode
 
             # regex which will detect the filenames of the loaded files
             re_str = "((?:" + re.escape( self.xml_file_path.get() ) + \
@@ -309,21 +323,27 @@ class App( Frame ):
 
             # check XSD validity
             #-----------------------------------------------------------------------
-            command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd_xsd + '"' + ' "' + self.path_xsd.get() + '"'
+#            command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd_xsd + '"' + ' "' + self.path_xsd.get() + '"'
 
-            retcode = self.run_xml_tool_command( command )
+#            retcode = self.run_xml_tool_command( command )
 
-            self.update_colors( self.xsd_valid, retcode )
-            if( retcode != 0 ): return
+#            self.update_colors( self.xsd_valid, retcode )
+#            if( retcode != 0 ): return
 
             # check XML validity
             #-----------------------------------------------------------------------
             command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd.get() + '"' + ' "' + self.path_xml.get() + '"'
 
             retcode = self.run_xml_tool_command( command )
-
-            self.update_colors( self.xml_valid, retcode )
-            if( retcode != 0 ): return
+            if( retcode == -100 ):
+                self.update_colors( self.xsd_valid, 1 )
+                return
+            if( retcode != 0):
+                self.update_colors( self.xml_valid, retcode )
+                self.update_colors( self.xsd_valid, 0 )
+                return
+            self.update_colors( self.xml_valid, 0 )
+            self.update_colors( self.xsd_valid, 0 )
 
     def check_xml_tool( self ):
         default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
