@@ -19,7 +19,7 @@ if( TkVersion < 8.5 ):
     sys.exit( "Fatal error: need Tkinter version 8.5 or higher." )
 
 #------------------------------------------------------------------------------
-#  execute command, reuturn a tuple containing commands' output, stderr and return code
+# execute command, reuturn a tuple containing commands' output, stderr and return code
 #------------------------------------------------------------------------------
 # http://stackoverflow.com/questions/337863/python-popen-and-select-waiting-for-a-process-to-terminate-or-a-timeout 
 def runcmd(cmd, timeout=None):
@@ -44,6 +44,27 @@ def runcmd(cmd, timeout=None):
 
     ph_out, ph_err = p.communicate()
     return (ph_out, ph_err, ph_ret)
+
+#------------------------------------------------------------------------------
+# checks whether `fpath` is an executable
+#------------------------------------------------------------------------------
+def is_exe( fpath ):
+    return os.path.exists( fpath ) and os.access( fpath, os.X_OK )
+
+#------------------------------------------------------------------------------
+# which - will look for 'program' in folders in the %PATH% env. variable
+#------------------------------------------------------------------------------
+def which( program ):
+    fpath, fname = os.path.split( program )
+    if fpath:
+        if is_exe( program ):
+            return program
+    else:
+        for path in os.environ["PATH"].split( os.pathsep ):
+            exe_file = os.path.join( path, program )
+            if is_exe( exe_file ):
+                return exe_file
+    return None
 
 #------------------------------------------------------------------------------
 class App( Frame ):
@@ -346,12 +367,14 @@ class App( Frame ):
             self.update_colors( self.xsd_valid, 0 )
 
     def check_xml_tool( self ):
-        default_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
-        if not os.path.isfile( default_path ):
-            tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
-            sys.exit()
+        xmlstar_bin_path = which( 'xml.exe' )
+        if not is_exe( xmlstar_bin_path ):
+            xmlstar_bin_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
+            if not is_exe( xmlstar_bin_path ):
+                tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
+                sys.exit()
         else:
-            self.xmlstar_bin = default_path
+            self.xmlstar_bin = xmlstar_bin_path
 
     def browse_for_xml( self ):
         options = {}
