@@ -10,6 +10,7 @@ import subprocess
 import commands
 import string
 import re
+import urllib
 
 from Tkinter import *
 import tkMessageBox
@@ -187,90 +188,107 @@ class App( Frame ):
             print "Unexpected error:", sys.exc_info()[0]
         return retcode
 
+    def process_xmlstar_val_err( self, err ):
+        # regex which will detect the filenames of the loaded files
+
+        xml_f = self.xml_file_path.get()
+        xsd_f = self.xsd_file_path.get()
+#        print "quoted xsd: " + urllib.quote( xsd_f, "/:" )
+
+        re_str = "((?:" + re.escape( xml_f ) + \
+                ")|(?:" + re.escape( xsd_f ) + \
+                ")|(?:" + re.escape( "file:///" + urllib.quote( xml_f, "/:" ) ) + \
+                ")|(?:" + re.escape( "file:///" + urllib.quote( xsd_f, "/:" ) ) + \
+                "))\:(\d+)\.(\d+)\:\s" 
+        cre_filename  = re.compile( re_str )
+
+        m = cre_filename.search( err )
+        if not m:
+            self.errors.insert( END, err )
+            return
+        #
+        self.errors.tag_configure('ill_element_name', foreground='#FA8072',    relief='raised')
+        self.errors.tag_configure('ill_namespace',    foreground='grey',       relief='raised')
+        self.errors.tag_configure('namespace',        foreground='grey',       relief='raised')
+        self.errors.tag_configure('element_name',     foreground='#8FBC8F',    relief='raised')
+        self.errors.tag_configure('dashes',           foreground='#708090',    relief='raised')
+
+        # find all the occurences of the filename inside the string returned by xmlstar
+        filename_iter = cre_filename.finditer( err )
+
+        for match in filename_iter:
+#            print "file: " + match.group(1) + "\n"
+            self.errors.insert( END, "File:    " + os.path.basename( match.group(1) ) + "\n" )
+            self.errors.insert( END, "Line:    " + match.group(2) + "\n" )
+            self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
+            message = err[ match.end():].replace( "\r", "" )
+
+            self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
+#            print "message: \n" + message
+
+            if( message.find( "This element is not expected. Expected is one of" ) != -1 ):
+                # regex for expected elements
+                re_elements = "'?(" + re.escape( "{http://www.w3.org/2001/XMLSchema}" ) + ")([a-zA-z]+)['\s,]"
+                cre_elements = re.compile( re_elements )
+
+
+                printed_ill_element = False
+                frags = cre_elements.split( message )
+                i=0
+                while ( i < len( frags ) - 1 ):
+                    frag = frags[i]
+                    if( frag == "Element " ):
+                        self.errors.insert( END, frag, ( "error_msg_body" ) )
+                        i = i+1
+                        continue
+                    if( frag == ": This element is not expected. Expected is one of ( " ):
+                        self.errors.insert( END, frag + "\n", ( "error_msg_body" ) )
+                        exp_ns = True
+                        i = i+1
+                        continue
+                    if( frag ==" " ):
+                        i = i+1
+                        continue
+                    if( frag ==")." ):
+                        break
+                    i = i+1
+                    if( printed_ill_element ):
+                        self.errors.insert( END, frag, ( "namespace" ) )
+                        self.errors.insert( END, frags[i] + "\n", ( "element_name" ) )
+                    else:
+                        self.errors.insert( END, frag, ( "namespace" ) )
+                        self.errors.insert( END, frags[i] + "\n", ( "ill_element_name" ) )
+                        printed_ill_element = True
+                    i = i+1
+            else:
+                self.errors.insert( END, message )
+
+            self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
+
+        self.errors[ "state" ] = DISABLED
+
     def run_xml_tool_command( self, command ):
         ( out, err, retcode ) = runcmd( command )
-        print "out: \n" + out
-        print "err: \n" + err
+#        print "out: \n" + out
+#        print "err: \n" + err
         if( retcode != 0 ):
             self.errors[ "state" ] = NORMAL
             self.errors.delete( 1.0, END )
             
 #            re_xsd_str = "(" + re.escape( os.path.basename(self.xsd_file_path.get()) ) + ")"
             re_xsd_str = re.escape( os.path.basename(self.xsd_file_path.get()) )
-            print re_xsd_str
+#            print re_xsd_str
             cre_xsd    = re.compile( re_xsd_str )
             
             m = cre_xsd.search( err )
-            print m
-            if( m):
-                self.errors.insert( END, err )
-                return -100
-            else:
-                self.errors.insert( END, err )
-                return retcode
+#            print m
+            if( m ):
+#                self.errors.insert( END, err )
+                retcode = -100
+#            else:
+#                self.errors.insert( END, err )
 
-            # regex which will detect the filenames of the loaded files
-            re_str = "((?:" + re.escape( self.xml_file_path.get() ) + \
-                    ")|(?:" + re.escape( self.xsd_file_path.get() ) + "))\:(\d+)\.(\d+)\:\s" 
-            cre_filename  = re.compile( re_str )
-
-            # find all the occurences of the filename inside the string returned by xmlstar
-            filename_iter = cre_filename.finditer( err )
-
-            for match in filename_iter:
-                self.errors.insert( END, "File:    " + os.path.basename( match.group(1) ) + "\n" )
-                self.errors.insert( END, "Line:    " + match.group(2) + "\n" )
-                self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
-                message = err[ match.end():]
-                self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
-                print "message: \n" + message
-
-                if( message.find( "This element is not expected. Expected is one of" ) != -1 ):
-                    # regex for expected elements
-                    re_elements = "'?(" + re.escape( "{http://www.w3.org/2001/XMLSchema}" ) + ")([a-zA-z]+)['\s,]"
-                    cre_elements = re.compile( re_elements )
-
-                    self.errors.tag_configure('ill_element_name', foreground='#FA8072',    relief='raised')
-                    self.errors.tag_configure('ill_namespace',    foreground='grey',       relief='raised')
-                    self.errors.tag_configure('namespace',        foreground='grey',       relief='raised')
-                    self.errors.tag_configure('element_name',     foreground='#8FBC8F',    relief='raised')
-                    self.errors.tag_configure('dashes',           foreground='#708090',    relief='raised')
-
-                    printed_ill_element = False
-                    frags = cre_elements.split( message )
-                    i=0
-                    while ( i < len( frags ) - 1 ):
-                        frag = frags[i]
-                        if( frag == "Element " ):
-                            self.errors.insert( END, frag, ( "error_msg_body" ) )
-                            i = i+1
-                            continue
-                        if( frag == ": This element is not expected. Expected is one of ( " ):
-                            self.errors.insert( END, frag + "\n", ( "error_msg_body" ) )
-                            exp_ns = True
-                            i = i+1
-                            continue
-                        if( frag ==" " ):
-                            i = i+1
-                            continue
-                        if( frag ==")." ):
-                            break
-                        i = i+1
-                        if( printed_ill_element ):
-                            self.errors.insert( END, frag, ( "namespace" ) )
-                            self.errors.insert( END, frags[i] + "\n", ( "element_name" ) )
-                        else:
-                            self.errors.insert( END, frag, ( "namespace" ) )
-                            self.errors.insert( END, frags[i] + "\n", ( "ill_element_name" ) )
-                            printed_ill_element = True
-                        i = i+1
-                else:
-                    self.errors.insert( END, message )
-
-                self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
-
-            self.errors[ "state" ] = DISABLED
-
+        self.process_xmlstar_val_err( err )
         return retcode
 
     def reset_colors( self ):
