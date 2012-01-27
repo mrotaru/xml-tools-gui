@@ -21,18 +21,28 @@
             <h2>Xtg: XML tools GUI</h2>
             <p>
             At the moment, Xtg requires the <a href="http://xmlstar.sourceforge.net">xmlstar toolkit</a> ( included ), which it then uses to
-            check a selected XML file for well-formedness and validity. Also included in the .zip file is the XSD file for W3C Schema, which
-            was downloaded from the W3C website; this file is used when checking the validity of XSD schemas.
-            </p>
+            check a selected XML file for well-formedness and validity.
 
             <p>
             <h5>Discalimer:</h5>
-            I didn't write the included XSD file, or the xmlstar toolkit ( which does most of the work ), I only wrote
-            the GUI.
+            I didn't write the xmlstar toolkit ( which does most of actual the work ), I only wrote the GUI.
             </p>
             
             <p>
-            Download latest version: <a href="https://github.com/downloads/mihai-rotaru/xml-tools-gui/xtg-v0.3.1.zip">Download Xtg v0.3.1</a>
+            Download latest version: <a href="https://github.com/downloads/mihai-rotaru/xml-tools-gui/xtg-v0.4.zip">Download Xtg v0.4</a>
+            </p>
+
+            <p>
+            Changes from v0.3.1:
+            <ul>
+                <li>find the xmlstar binary even if it isn't in the current folder, but in the $PATH</li>
+                <li>fix files from folders containing spaces are shown encoded</li>
+                <li>clearer error messages: separate filename, line and column from message</li>
+                <li>get rid of hollow squares appearing in output</li>
+            </ul>
+            </p>
+
+
             Other downloads: <a href="https://github.com/mihai-rotaru/xml-tools-gui/downloads">here</a>  
             </p>
 
