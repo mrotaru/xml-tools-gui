@@ -1,4 +1,4 @@
-# !/bin/env/python
+#!/usr/bin/python
 #
 #------------------------------------------------------------------------------
 # xtg v0.4 ( xml tools gui )
@@ -28,7 +28,7 @@ def runcmd(cmd, timeout=None):
     ph_err = None # stderr
     ph_ret = None # return code
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
     # if timeout is not set wait for process to complete
     if not timeout:
         ph_ret = p.wait()
@@ -293,13 +293,13 @@ class App( Frame ):
 
     def reset_colors( self ):
         self.xml_wf     [ "fg" ] = "gray"
-        self.xml_wf     [ "bg" ] = "SystemButtonFace"
+        self.xml_wf     [ "bg" ] = "lightgray"
         self.xml_valid  [ "fg" ] = "gray"
-        self.xml_valid  [ "bg" ] = "SystemButtonFace"
+        self.xml_valid  [ "bg" ] = "lightgray"
         self.xsd_wf     [ "fg" ] = "gray"
-        self.xsd_wf     [ "bg" ] = "SystemButtonFace"
+        self.xsd_wf     [ "bg" ] = "lightgray"
         self.xsd_valid  [ "fg" ] = "gray"
-        self.xsd_valid  [ "bg" ] = "SystemButtonFace"
+        self.xsd_valid  [ "bg" ] = "lightgray"
 
     def update_colors( self, widget, code ):
         if( code == 0 ):
@@ -385,14 +385,19 @@ class App( Frame ):
             self.update_colors( self.xsd_valid, 0 )
 
     def check_xml_tool( self ):
-        xmlstar_bin_path = which( 'xml.exe' )
-        if not is_exe( xmlstar_bin_path ):
-            xmlstar_bin_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
+        if sys.platform == 'win32':
+            xmlstar_bin_path = which( 'xml.exe' )
+            if not is_exe( xmlstar_bin_path ):
+                xmlstar_bin_path = sys.path[0] + '/xmlstarlet-1.3.0/xml.exe'  
+                if not is_exe( xmlstar_bin_path ):
+                    tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
+                    sys.exit()
+        elif sys.platform == 'linux2':
+            xmlstar_bin_path = which( 'xmlstarlet' )
             if not is_exe( xmlstar_bin_path ):
                 tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
                 sys.exit()
-        else:
-            self.xmlstar_bin = xmlstar_bin_path
+        self.xmlstar_bin = xmlstar_bin_path
 
     def browse_for_xml( self ):
         options = {}
