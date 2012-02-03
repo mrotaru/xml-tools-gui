@@ -199,7 +199,7 @@ class App( Frame ):
                 ")|(?:" + re.escape( xsd_f ) + \
                 ")|(?:" + re.escape( "file:///" + urllib.quote( xml_f, "/:" ) ) + \
                 ")|(?:" + re.escape( "file:///" + urllib.quote( xsd_f, "/:" ) ) + \
-                "))\:(\d+)\.(\d+)\:\s" 
+                "))\:(\d+)(:\.(\d+))?\:\s" 
         cre_filename  = re.compile( re_str )
 
         m = cre_filename.search( err )
@@ -220,7 +220,8 @@ class App( Frame ):
 #            print "file: " + match.group(1) + "\n"
             self.errors.insert( END, "File:    " + os.path.basename( match.group(1) ) + "\n" )
             self.errors.insert( END, "Line:    " + match.group(2) + "\n" )
-            self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
+            if match.group(3):
+                self.errors.insert( END, "Column:  " + match.group(3) + "\n" )
             message = err[ match.end():].replace( "\r", "" )
 
             self.errors.insert( END, "-----------------------------------------------------------------------" + "\n", ( "dashes" ) )
