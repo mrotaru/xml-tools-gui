@@ -203,7 +203,7 @@ class App( Frame ):
                 ")|(?:" + re.escape( xsd_f ) + \
                 ")|(?:" + re.escape( "file:///" + urllib.quote( xml_f, "/:" ) ) + \
                 ")|(?:" + re.escape( "file:///" + urllib.quote( xsd_f, "/:" ) ) + \
-                "))\:(\d+)(:\.(\d+))?\:\s" 
+                "))\:(\d+)\.(\d+)\:\s" 
         cre_filename  = re.compile( re_str )
 
         m = cre_filename.search( err )
@@ -403,7 +403,6 @@ class App( Frame ):
                 tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
                 sys.exit()
         self.xmlstar_bin = xmlstar_bin_path
-        print "bin: " + self.xmlstar_bin
 
     def browse_for_xml( self ):
         options = {}
