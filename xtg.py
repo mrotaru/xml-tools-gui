@@ -208,7 +208,7 @@ class App( Frame ):
 
         m = cre_filename.search( err )
         if not m:
-            self.errors.insert( END, err )
+            self.errors.insert( END, err.replace( "\r", "" ))
             return
         #
         self.errors.tag_configure('ill_element_name', foreground='#FA8072',    relief='raised')
