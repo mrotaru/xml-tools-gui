@@ -28,7 +28,11 @@ def runcmd(cmd, timeout=None):
     ph_err = None # stderr
     ph_ret = None # return code
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+    if sys.platform == 'win32':
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    elif sys.platform == 'linux2':
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+
     # if timeout is not set wait for process to complete
     if not timeout:
         ph_ret = p.wait()
@@ -346,7 +350,7 @@ class App( Frame ):
 
         # check XML well-formedness
         #-----------------------------------------------------------------------
-        command = self.xmlstar_bin + ' val --err --well-formed "' + self.path_xml.get() + '"'
+        command = '"' + self.xmlstar_bin + '" val --err --well-formed "' + self.path_xml.get() + '"'
         retcode = self.run_xml_tool_command( command )
 
         self.update_colors( self.xml_wf, retcode )
@@ -355,7 +359,7 @@ class App( Frame ):
         # check XSD well-formedness
         #-----------------------------------------------------------------------
         if( len( self.path_xsd.get().strip()) > 0 ):
-            command = self.xmlstar_bin + ' val --err --well-formed "' + self.path_xsd.get() + '"'
+            command = '"' + self.xmlstar_bin + '" val --err --well-formed "' + self.path_xsd.get() + '"'
             retcode = self.run_xml_tool_command( command )
 
             self.update_colors( self.xsd_wf, retcode )
@@ -372,7 +376,7 @@ class App( Frame ):
 
             # check XML validity
             #-----------------------------------------------------------------------
-            command = self.xmlstar_bin + ' val --err --xsd "' + self.path_xsd.get() + '"' + ' "' + self.path_xml.get() + '"'
+            command = '"' + self.xmlstar_bin + '" val --err --xsd "' + self.path_xsd.get() + '"' + ' "' + self.path_xml.get() + '"'
 
             retcode = self.run_xml_tool_command( command )
             if( retcode == -100 ):
@@ -399,6 +403,7 @@ class App( Frame ):
                 tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
                 sys.exit()
         self.xmlstar_bin = xmlstar_bin_path
+        print "bin: " + self.xmlstar_bin
 
     def browse_for_xml( self ):
         options = {}
