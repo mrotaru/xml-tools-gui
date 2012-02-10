@@ -388,7 +388,7 @@ class App( Frame ):
     def check_xml_tool( self ):
         if sys.platform == 'win32':
             xmlstar_bin_path = which( 'xml.exe' )
-            if not is_exe( xmlstar_bin_path ):
+            if not xmlstar_bin_path or not is_exe( xmlstar_bin_path ):
                 xmlstar_bin_path = sys.path[0] + '/xmlstarlet-1.3.1/xml.exe'  
                 if not is_exe( xmlstar_bin_path ):
                     tkMessageBox.showinfo( "Text", "Cannot find the xmlstar executable" )
