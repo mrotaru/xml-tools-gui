@@ -1,47 +1,52 @@
 <!DOCTYPE html>
-<meta charset="utf-8" />
 
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+        <title>Xtg: XML tools GUI</title>
+        <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+    </head>
 
-<head>
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <title>Xtg: XML tools GUI</title>
-    <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-</head>
+    <body>
+        <div id="page-wrap">
 
-<body>
-    <div id="page-wrap">
-
-        <header>
+            <header>
             <h1>Xtg: XML tools GUI</h1>
-        </header>
+            </header>
 
-        <div id="main-content">
-            <p>
-            <p>A simple GUI for <a href="http://xmlstar.sourceforge.net">XMLStarlet toolkit</a> to check for well-formendess and validate XML files.</p>
-            </p>
-            <a class="button big green" href="https://github.com/downloads/mihai-rotaru/xml-tools-gui/xtg-V0.4.2.zip">Download<span>xtg-V0.4.2.zip</span></a>
+            <div id="main-content">
+                <img src="xtg.png" alt="A screenshot of Xtg running" />
+                <p>A simple GUI for <a href="http://xmlstar.sourceforge.net">XMLStarlet toolkit</a> to check for well-formendess and validate XML files.</p>
+                <a class="button big green" href="https://github.com/downloads/mihai-rotaru/xml-tools-gui/xtg-V0.4.2.zip">Download<span>xtg-V0.4.2.zip</span></a>
 
-            <!-- CHANGELOG -->
-<section class="changelog">
-    <strong>Changes from V0.4.1 to V0.4.2:</strong>
-    <ul>
-        <li>avoid fatal error by running command without 'shell=true' on Windows</li>
-        <li>change regex used to detect encoded filenames</li>
-        <li>no squares for unformatted error messages</li>
-    </ul>
-</section>
+                <!-- CHANGELOG -->
+                <section class="changelog">
+                <strong>Changes from V0.4.1 to V0.4.2:</strong>
+                <ul>
+                    <li>avoid fatal error by running command without 'shell=true' on Windows</li>
+                    <li>change regex used to detect encoded filenames</li>
+                    <li>no squares for unformatted error messages</li>
+                </ul>
+                </section>
 
-        </div> <!-- main-content -->
+            </div> <!-- main-content -->
 
-        <footer>
+            <footer>
             <a class="button gray" href="https://github.com/mihai-rotaru/xml-tools-gui/issues">Request features and report bugs</a>
             <a class="button gray" href="https://github.com/mihai-rotaru/xml-tools-gui">View source code</a>
-        </footer>
+            </footer>
 
-    </div> <!-- page-wrap -->
-</body>
-        
+        </div> <!-- page-wrap -->
+
+        <div class="logo-footer">
+        <a href="http://validator.w3.org/check?uri=referer">
+        <img src="http://www.w3.org/html/logo/badge/html5-badge-h-css3-semantics.png" width="165" height="64" alt="HTML5 Powered with CSS3 / Styling, and Semantics" title="HTML5 Powered with CSS3 / Styling, and Semantics">
+        </a>
+    </div>
+
+    </body>
+
 </html>

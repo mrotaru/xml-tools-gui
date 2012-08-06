@@ -4,6 +4,7 @@ article, aside, audio, footer, header, nav, section, video { display: block }
 body {
     padding: 20px;
     background-color: #222028;
+    font-family: georgia;
 }
 
 #page-wrap {
@@ -12,6 +13,18 @@ body {
     border: solid 2px black;
     width: 800px;
 /*    height: 500px;*/
+}
+
+.logo-footer {
+    margin-left: auto;
+    margin-right: auto;
+    width: 200px;
+    margin-top: 30px;
+    filter: url(resources.svg#desaturate);
+}
+
+.logo-footer:hover {
+    filter: none;
 }
 
 #main-content {
